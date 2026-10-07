@@ -21,6 +21,7 @@
 #define __C_ECOHEAPSORT_H__
 
 #include "IEcoHeapSort.h"
+#include "IEcoSortAndSearch.h"
 #include "IEcoSystem1.h"
 #include "IdEcoMemoryManager1.h"
 
@@ -30,6 +31,9 @@ typedef struct CEcoHeapSort_D8D41318 {
 
     /* IEcoHeapSort interface function table */
     IEcoHeapSortVTbl* m_pVTblIEcoHeapSort;
+
+    /* Secondary interface; its receiver points to this field, not the object. */
+    IEcoSortAndSearchVTbl* m_pVTblIEcoSortAndSearch;
 
 
     /* Instance initialization */

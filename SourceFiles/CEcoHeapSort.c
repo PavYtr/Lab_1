@@ -56,6 +56,10 @@ static int16_t ECOCALLMETHOD CEcoHeapSort_D8D41318_QueryInterface(/* in */ IEcoH
         *ppv = &pCMe->m_pVTblIEcoHeapSort;
         pCMe->m_pVTblIEcoHeapSort->AddRef((IEcoHeapSort*)pCMe);
     }
+    else if ( IsEqualUGUID(riid, &IID_IEcoSortAndSearch) ) {
+        *ppv = &pCMe->m_pVTblIEcoSortAndSearch;
+        pCMe->m_pVTblIEcoHeapSort->AddRef((IEcoHeapSort*)pCMe);
+    }
     else {
         *ppv = 0;
         return ERR_ECO_NOINTERFACE;
@@ -113,6 +117,91 @@ static uint32_t ECOCALLMETHOD CEcoHeapSort_D8D41318_Release(/* in */ IEcoHeapSor
         return 0;
     }
     return pCMe->m_cRef;
+}
+
+/* Recover the containing object from the secondary interface's actual offset. */
+static CEcoHeapSort_D8D41318* CEcoHeapSort_FromSort(IEcoSortAndSearchPtr_t me) {
+    if (me == 0) {
+        return 0;
+    }
+    return (CEcoHeapSort_D8D41318*)((unsigned char*)me -
+        offsetof(CEcoHeapSort_D8D41318, m_pVTblIEcoSortAndSearch));
+}
+
+static int16_t ECOCALLMETHOD CEcoHeapSort_SortQueryInterface(
+    IEcoSortAndSearchPtr_t me, const UGUID* riid, void** ppv) {
+    return CEcoHeapSort_D8D41318_QueryInterface(
+        (IEcoHeapSort*)CEcoHeapSort_FromSort(me), riid, ppv);
+}
+
+static uint32_t ECOCALLMETHOD CEcoHeapSort_SortAddRef(IEcoSortAndSearchPtr_t me) {
+    return CEcoHeapSort_D8D41318_AddRef((IEcoHeapSort*)CEcoHeapSort_FromSort(me));
+}
+
+static uint32_t ECOCALLMETHOD CEcoHeapSort_SortRelease(IEcoSortAndSearchPtr_t me) {
+    return CEcoHeapSort_D8D41318_Release((IEcoHeapSort*)CEcoHeapSort_FromSort(me));
+}
+
+static void CEcoHeapSort_Swap(unsigned char* left, unsigned char* right, size_t size) {
+    size_t index;
+    unsigned char byte;
+    for (index = 0; index < size; ++index) {
+        byte = left[index];
+        left[index] = right[index];
+        right[index] = byte;
+    }
+}
+
+/* Only internal nodes have children. Testing root < count/2 BEFORE multiplying
+ * guarantees that 2*root+1 and the possible right child fit size_t. */
+static void CEcoHeapSort_SiftDown(unsigned char* base, size_t count,
+                                size_t root, size_t size, EcoSortCompare_t compare) {
+    size_t child;
+    while (root < count / 2) {
+        child = root * 2 + 1;
+        if (child + 1 < count &&
+            compare(base + child * size, base + (child + 1) * size) < 0) {
+            ++child;
+        }
+        if (compare(base + root * size, base + child * size) >= 0) {
+            break;
+        }
+        CEcoHeapSort_Swap(base + root * size, base + child * size, size);
+        root = child;
+    }
+}
+
+static void ECOCALLMETHOD CEcoHeapSort_Sort(IEcoSortAndSearchPtr_t me, void* base,
+                                         size_t count, size_t size,
+                                         EcoSortCompare_t compare) {
+    unsigned char* bytes = (unsigned char*)base;
+    size_t root;
+    size_t end;
+
+    /* No array access or callback for zero/one element, even with null arguments. */
+    if (count < 2) {
+        return;
+    }
+    if (me == 0 || base == 0 || compare == 0 || size == 0 ||
+        count > (size_t)-1 / size) {
+        return;
+    }
+
+    /* Bottom-up construction of the maximum heap takes O(count) comparisons. */
+    root = count / 2;
+    while (root != 0) {
+        --root;
+        CEcoHeapSort_SiftDown(bytes, count, root, size, compare);
+    }
+
+    /* Move each maximum to the sorted suffix, then restore the smaller heap.
+     * O(count*log(count)) comparisons; one byte and fixed indices of storage. */
+    end = count;
+    while (end > 1) {
+        --end;
+        CEcoHeapSort_Swap(bytes, bytes + end * size, size);
+        CEcoHeapSort_SiftDown(bytes, end, 0, size, compare);
+    }
 }
 
 /*
@@ -285,17 +374,25 @@ IEcoHeapSortVTbl g_x2245125DB01140359FCA43A4406E50B5VTbl_D8D41318 = {
     CEcoHeapSort_D8D41318_MyFunction
 };
 
+IEcoSortAndSearchVTbl g_IEcoSortAndSearchVTbl_D8D41318 = {
+    CEcoHeapSort_SortQueryInterface,
+    CEcoHeapSort_SortAddRef,
+    CEcoHeapSort_SortRelease,
+    CEcoHeapSort_Sort
+};
+
 
 
 /* Object Instance */
 CEcoHeapSort_D8D41318 g_xCEcoHeapSort_D8D41318 = {
     &g_x2245125DB01140359FCA43A4406E50B5VTbl_D8D41318,
+    &g_IEcoSortAndSearchVTbl_D8D41318,
    
     initCEcoHeapSort_D8D41318,
     createCEcoHeapSort_D8D41318,
     deleteCEcoHeapSort_D8D41318,
     1, /* m_cRef */
-    0, /* m_pISys */
+    0, /* m_pIMem */
     0, /* m_pISys */
     0  /* m_Name */
 };

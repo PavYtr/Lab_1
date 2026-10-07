@@ -91,7 +91,8 @@ else
     OUT_TARGET = A3A5BD4760D34C1691719DF4D8D41318.so
     BASE_TARGET = Dynamic
     CCFLAGS_BASE = -DECO_DLL -fPIC
-    CMD_LINK = $(LINK_CC) -shared -o $@ $(OBJ) $(LDFLAGS) $(LIBS)
+    # The Eco component uses no C runtime; exclude CRT objects and implicit libc.
+    CMD_LINK = $(LINK_CC) -nostdlib -shared -o $@ $(OBJ) $(LDFLAGS) $(LIBS)
 endif
 
 # --- Output Directory Mapping ---

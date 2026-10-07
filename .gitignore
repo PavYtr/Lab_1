@@ -1,12 +1,42 @@
-# Local agent settings and credentials
 .agents/
 .codex/
 .aws/
-
-
-# IDE caches and user settings
 .vs/
 
+# Результаты сборки
+/BuildFiles/
+*.o
+*.obj
+*.d
+*.a
+*.lib
+*.so
+*.so.*
+*.dll
+*.dylib
+*.exe
+*.map
+*.pdb
+*.ilk
+*.exp
 
-# Local task document
+# Личные настройки IDE
+*.vcxproj.user
+*.suo
+.idea/
+xcuserdata/
+*.xcuserstate
+DerivedData/
+
+# Временные файлы
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Локальное задание для агента
+/prompt.txt
 Список заданий_1_v1.pdf
