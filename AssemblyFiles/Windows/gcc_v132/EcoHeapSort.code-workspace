@@ -1,0 +1,265 @@
+{
+	"folders": [
+		{ "path": ".", "name": "AssemblyFiles" },
+		{ "path": "../../../BuildFiles", "name": "BuildFiles" },
+		{ "path": "../../../DependenciesFiles" },
+		{ "path": "../../../DesignFiles" },
+		{ "path": "../../../HeaderFiles" },
+		{ "path": "../../../SharedFiles" },
+		{ "path": "../../../SourceFiles" },
+		{ "path": "../../../UnitTestFiles" }
+	],
+	"settings": {
+		"C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
+		"C_Cpp.default.cStandard": "c89",
+		"C_Cpp.default.includePath": [
+			"${workspaceFolder}/**",
+			"**/../../HeaderFiles",
+			"**/../../SharedFiles",
+			"$(ECO_FRAMEWORK)/Eco.Core1/SharedFiles",
+			"$(ECO_FRAMEWORK)/Eco.InterfaceBus1/SharedFiles",
+			"$(ECO_FRAMEWORK)/Eco.MemoryManager1/SharedFiles",
+			"$(ECO_FRAMEWORK)/Eco.FileSystemManagement1/SharedFiles",
+			"$(ECO_FRAMEWORK)/Eco.System1/SharedFiles"
+		],
+		"makefile.configurations": [
+			{ "name": "EcoHeapSort Static|x86 Debug", "makeArgs": ["TARGET=1", "ARCH=x86", "DEBUG=1"] },
+			{ "name": "EcoHeapSort Static|x86 Release", "makeArgs": ["TARGET=1", "ARCH=x86", "DEBUG=0"] },
+			{ "name": "EcoHeapSort Static|x64 Debug", "makeArgs": ["TARGET=1", "ARCH=x64", "DEBUG=1"] },
+			{ "name": "EcoHeapSort Static|x64 Release", "makeArgs": ["TARGET=1", "ARCH=x64", "DEBUG=0"] },
+			{ "name": "EcoHeapSort Dynamic|x86 Debug", "makeArgs": ["TARGET=0", "ARCH=x86", "DEBUG=1"] },
+			{ "name": "EcoHeapSort Dynamic|x86 Release", "makeArgs": ["TARGET=0", "ARCH=x86", "DEBUG=0"] },
+			{ "name": "EcoHeapSort Dynamic|x64 Debug", "makeArgs": ["TARGET=0", "ARCH=x64", "DEBUG=1"] },
+			{ "name": "EcoHeapSort Dynamic|x64 Release", "makeArgs": ["TARGET=0", "ARCH=x64", "DEBUG=0"] },
+			{ "name": "EcoHeapSortUnitTest Static|x86 Debug", "makeArgs": ["-f", "MakefileExe", "TARGET=1", "ARCH=x86", "DEBUG=1"] },
+			{ "name": "EcoHeapSortUnitTest Static|x64 Debug", "makeArgs": ["-f", "MakefileExe", "TARGET=1", "ARCH=x64", "DEBUG=1"] },
+			{ "name": "EcoHeapSortUnitTest Dynamic|x86 Debug", "makeArgs": ["-f", "MakefileExe", "TARGET=0", "ARCH=x86", "DEBUG=1"] },
+			{ "name": "EcoHeapSortUnitTest Dynamic|x64 Debug", "makeArgs": ["-f", "MakefileExe", "TARGET=0", "ARCH=x64", "DEBUG=1"] }
+		]
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "DEBUG: EcoHeapSortUnitTest Static|x86",
+				"type": "cppdbg",
+				"request": "launch",
+				"program": "${workspaceFolder:BuildFiles}/Windows/x86/StaticDebug/EcoHeapSort.exe",
+				"cwd": "${workspaceFolder:BuildFiles}/Windows/x86/StaticDebug",
+				"preLaunchTask": "build EcoHeapSortUnitTest StaticDebug|x86",
+				"MIMode": "gdb",
+				"miDebuggerPath": "${env:ECO_TOOLCHAIN}/eco-i686-win-dwarf-gcc-13.2.0-win-x86_64/bin/gdb.exe"
+			},
+			{
+				"name": "DEBUG: EcoHeapSortUnitTest Static|x64",
+				"type": "cppdbg",
+				"request": "launch",
+				"program": "${workspaceFolder:BuildFiles}/Windows/x64/StaticDebug/EcoHeapSort.exe",
+				"cwd": "${workspaceFolder:BuildFiles}/Windows/x64/StaticDebug",
+				"preLaunchTask": "build EcoHeapSortUnitTest StaticDebug|x64",
+				"MIMode": "gdb",
+				"miDebuggerPath": "${env:ECO_TOOLCHAIN}/eco-x86_64-win-dwarf-gcc-13.2.0-win-x86_64/bin/gdb.exe"
+			},
+			{
+				"name": "DEBUG: EcoHeapSortUnitTest Dynamic|x86",
+				"type": "cppdbg",
+				"request": "launch",
+				"program": "${workspaceFolder:BuildFiles}/Windows/x86/DynamicDebug/EcoHeapSort.exe",
+				"cwd": "${workspaceFolder:BuildFiles}/Windows/x86/DynamicDebug",
+				"preLaunchTask": "build EcoHeapSortUnitTest DynamicDebug|x86",
+				"MIMode": "gdb",
+				"miDebuggerPath": "${env:ECO_TOOLCHAIN}/eco-i686-win-dwarf-gcc-13.2.0-win-x86_64/bin/gdb.exe"
+			},
+			{
+				"name": "DEBUG: EcoHeapSortUnitTest Dynamic|x64",
+				"type": "cppdbg",
+				"request": "launch",
+				"program": "${workspaceFolder:BuildFiles}/Windows/x64/DynamicDebug/EcoHeapSort.exe",
+				"cwd": "${workspaceFolder:BuildFiles}/Windows/x64/DynamicDebug",
+				"preLaunchTask": "build EcoHeapSortUnitTest DynamicDebug|x64",
+				"MIMode": "gdb",
+				"miDebuggerPath": "${env:ECO_TOOLCHAIN}/eco-x86_64-win-dwarf-gcc-13.2.0-win-x86_64/bin/gdb.exe"
+			}
+		]
+	},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"label": "build all configurations",
+				"type": "shell",
+				"command": "${workspaceFolder:AssemblyFiles}/build.bat",
+			"args": [ "-f", "MakefileExe" ],
+				"group": { "kind": "build", "isDefault": true },
+				"presentation": { "echo": true, "reveal": "always", "focus": false, "panel": "shared" },
+				"problemMatcher": []
+			},
+			{
+				"label": "build EcoHeapSort StaticDebug|x86",
+				"type": "shell",
+				"command": "call make",
+				"args": [ "-f", "Makefile", "TARGET=1", "DEBUG=1", "ARCH=x86" ],
+				"group": "build",
+				"presentation": { "echo": true, "reveal": "silent", "focus": false, "panel": "shared" },
+				"options": { "env": { "MSYS_NO_PATHCONV": "1" }, "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": [ "$msCompile" ]
+			},
+			{
+				"label": "build EcoHeapSort StaticRelease|x86",
+				"type": "shell",
+				"command": "call make",
+				"args": [ "-f", "Makefile", "TARGET=1", "DEBUG=0", "ARCH=x86" ],
+				"group": "build",
+				"presentation": { "echo": true, "reveal": "silent", "focus": false, "panel": "shared" },
+				"options": { "env": { "MSYS_NO_PATHCONV": "1" }, "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": [ "$msCompile" ]
+			},
+			{
+				"label": "build EcoHeapSort DynamicDebug|x86",
+				"type": "shell",
+				"command": "call make",
+				"args": [ "-f", "Makefile", "TARGET=0", "DEBUG=1", "ARCH=x86" ],
+				"group": "build",
+				"presentation": { "echo": true, "reveal": "silent", "focus": false, "panel": "shared" },
+				"options": { "env": { "MSYS_NO_PATHCONV": "1" }, "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": [ "$msCompile" ]
+			},
+			{
+				"label": "build EcoHeapSort DynamicRelease|x86",
+				"type": "shell",
+				"command": "call make",
+				"args": [ "-f", "Makefile", "TARGET=0", "DEBUG=0", "ARCH=x86" ],
+				"group": "build",
+				"presentation": { "echo": true, "reveal": "silent", "focus": false, "panel": "shared" },
+				"options": { "env": { "MSYS_NO_PATHCONV": "1" }, "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": [ "$msCompile" ]
+			},
+			{
+				"label": "build EcoHeapSort StaticDebug|x64",
+				"type": "shell",
+				"command": "call make",
+				"args": [ "-f", "Makefile", "TARGET=1", "DEBUG=1", "ARCH=x64" ],
+				"group": "build",
+				"presentation": { "echo": true, "reveal": "silent", "focus": false, "panel": "shared" },
+				"options": { "env": { "MSYS_NO_PATHCONV": "1" }, "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": [ "$msCompile" ]
+			},
+			{
+				"label": "build EcoHeapSort StaticRelease|x64",
+				"type": "shell",
+				"command": "call make",
+				"args": [ "-f", "Makefile", "TARGET=1", "DEBUG=0", "ARCH=x64" ],
+				"group": "build",
+				"presentation": { "echo": true, "reveal": "silent", "focus": false, "panel": "shared" },
+				"options": { "env": { "MSYS_NO_PATHCONV": "1" }, "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": [ "$msCompile" ]
+			},
+			{
+				"label": "build EcoHeapSort DynamicDebug|x64",
+				"type": "shell",
+				"command": "call make",
+				"args": [ "-f", "Makefile", "TARGET=0", "DEBUG=1", "ARCH=x64" ],
+				"group": "build",
+				"presentation": { "echo": true, "reveal": "silent", "focus": false, "panel": "shared" },
+				"options": { "env": { "MSYS_NO_PATHCONV": "1" }, "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": [ "$msCompile" ]
+			},
+			{
+				"label": "build EcoHeapSort DynamicRelease|x64",
+				"type": "shell",
+				"command": "call make",
+				"args": [ "-f", "Makefile", "TARGET=0", "DEBUG=0", "ARCH=x64" ],
+				"group": "build",
+				"presentation": { "echo": true, "reveal": "silent", "focus": false, "panel": "shared" },
+				"options": { "env": { "MSYS_NO_PATHCONV": "1" }, "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": [ "$msCompile" ]
+			},
+			{
+				"label": "build EcoHeapSortUnitTest StaticDebug|x86",
+				"type": "shell",
+				"command": "call make",
+				"args": [ "-f", "MakefileExe", "TARGET=1", "DEBUG=1", "ARCH=x86" ],
+				"group": "build",
+				"dependsOn": ["build EcoHeapSort StaticDebug|x86"],
+				"options": { "env": { "MSYS_NO_PATHCONV": "1" }, "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": [ "$msCompile" ]
+			},
+			{
+				"label": "build EcoHeapSortUnitTest StaticRelease|x86",
+				"type": "shell",
+				"command": "call make",
+				"args": [ "-f", "MakefileExe", "TARGET=1", "DEBUG=0", "ARCH=x86" ],
+				"group": "build",
+				"dependsOn": ["build EcoHeapSort StaticRelease|x86"],
+				"options": { "env": { "MSYS_NO_PATHCONV": "1" }, "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": [ "$msCompile" ]
+			},
+			{
+				"label": "build EcoHeapSortUnitTest DynamicDebug|x86",
+				"type": "shell",
+				"command": "call make",
+				"args": ["-f", "MakefileExe", "TARGET=0", "DEBUG=1", "ARCH=x86" ],
+				"group": "build",
+				"dependsOn": ["build EcoHeapSort DynamicDebug|x86"],
+				"options": { "env": { "MSYS_NO_PATHCONV": "1" }, "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": [ "$msCompile" ]
+			},
+			{
+				"label": "build EcoHeapSortUnitTest DynamicRelease|x86",
+				"type": "shell",
+				"command": "call make",
+				"args": [ "-f", "MakefileExe", "TARGET=0", "DEBUG=0", "ARCH=x86" ],
+				"group": "build",
+				"dependsOn": ["build EcoHeapSort DynamicRelease|x86"],
+				"options": { "env": { "MSYS_NO_PATHCONV": "1" }, "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": [ "$msCompile" ]
+			},
+			{
+				"label": "build EcoHeapSortUnitTest StaticDebug|x64",
+				"type": "shell",
+				"command": "call make",
+				"args": [ "-f", "MakefileExe", "TARGET=1", "DEBUG=1", "ARCH=x64" ],
+				"group": "build",
+				"dependsOn": ["build EcoHeapSort StaticDebug|x64"],
+				"options": { "env": { "MSYS_NO_PATHCONV": "1" }, "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": [ "$msCompile" ]
+			},
+			{
+				"label": "build EcoHeapSortUnitTest StaticRelease|x64",
+				"type": "shell",
+				"command": "call make",
+				"args": [ "-f", "MakefileExe", "TARGET=1", "DEBUG=0", "ARCH=x64" ],
+				"group": "build",
+				"dependsOn": ["build EcoHeapSort StaticRelease|x64"],
+				"options": { "env": { "MSYS_NO_PATHCONV": "1" }, "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": [ "$msCompile" ]
+			},
+			{
+				"label": "build EcoHeapSortUnitTest DynamicDebug|x64",
+				"type": "shell",
+				"command": "call make",
+				"args": [ "-f", "MakefileExe", "TARGET=0", "DEBUG=1", "ARCH=x64" ],
+				"group": "build",
+				"dependsOn": ["build EcoHeapSort DynamicDebug|x64"],
+				"options": { "env": { "MSYS_NO_PATHCONV": "1" }, "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": [ "$msCompile" ]
+			},
+			{
+				"label": "build EcoHeapSortUnitTest DynamicRelease|x64",
+				"type": "shell",
+				"command": "call make",
+				"args": [ "-f", "MakefileExe", "TARGET=0", "DEBUG=0", "ARCH=x64" ],
+				"group": "build",
+				"dependsOn": ["build EcoHeapSort DynamicRelease|x64"],
+				"options": { "env": { "MSYS_NO_PATHCONV": "1" }, "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": [ "$msCompile" ]
+			},
+			{
+				"label": "Clean All",
+				"type": "shell",
+				"command": "call make clean",
+				"options": { "cwd": "${workspaceFolder:AssemblyFiles}" }
+			}
+		]
+	}
+}

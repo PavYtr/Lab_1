@@ -1,0 +1,12 @@
+# Local agent settings and credentials
+.agents/
+.codex/
+.aws/
+
+
+# IDE caches and user settings
+.vs/
+
+
+# Local task document
+Список заданий_1_v1.pdf

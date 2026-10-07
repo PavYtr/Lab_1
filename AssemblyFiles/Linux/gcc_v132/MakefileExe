@@ -1,0 +1,175 @@
+# Paths are relative to this makefile, so -C and -f both work.
+MAKEFILE_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+PROJECT_ROOT := $(abspath $(MAKEFILE_DIR)/../../..)
+ECO_FRAMEWORK ?= $(abspath $(PROJECT_ROOT)/../Eco.Framework)
+
+# --- Host Platform Detection ---
+ifeq ($(OS), Windows_NT)
+    RM = -del /q /f
+    SLASH = /
+    ECO_TOOLCHAIN_ENV := $(if $(ECO_TOOLCHAIN),$(subst \,/,$(ECO_TOOLCHAIN)),)
+else
+    RM = rm -f
+    SLASH = /
+    ECO_TOOLCHAIN_ENV := $(ECO_TOOLCHAIN)
+endif
+
+# --- Project Configuration ---
+TARGET ?= 1
+DEVICE ?= D1
+ARCH ?= x86_64
+DEBUG ?= 0
+PLATFORM = Linux
+
+# --- Toolchain, Path and Architecture Selection ---
+ifeq ($(ARCH), x86_64)
+    CCFLAGS_ARCH = -DECO_X86_64
+    ARCH_TARGET = x86_64
+    ECO_PKG_ID = eco-x86_64-linux-gnu-gcc
+    ECO_PKG_VER = 13.2.0
+    ECO_GEN_SYS_LIB = 00000000000000000000000053595333
+    ifneq ($(ECO_TOOLCHAIN_ENV),)
+        TOOL = x86_64-linux-gnu-
+    endif
+else ifeq ($(ARCH), x86_32)
+    CCFLAGS_ARCH = -DECO_X86_32 -m32
+    ARCH_TARGET = x86_32
+    ECO_PKG_ID = eco-x86_32-linux-gnu-gcc
+    ECO_PKG_VER = 13.2.0
+    ECO_GEN_SYS_LIB = 00000000000000000000000053595332
+    ifneq ($(ECO_TOOLCHAIN_ENV),)
+        TOOL = i386-linux-gnu-
+    endif
+else ifeq ($(ARCH), rv64)
+    CCFLAGS_ARCH = -DECO_RISCV_64
+    ARCH_TARGET = rv64
+    ECO_PKG_ID = eco-riscv64-linux-gnu-gcc
+    ECO_PKG_VER = 13.2.0
+    ECO_GEN_SYS_LIB = 00000000000000000000000053595333
+    ifneq ($(ECO_TOOLCHAIN_ENV),)
+        TOOL = riscv64-linux-gnu-
+    endif
+else ifeq ($(ARCH), aarch64)
+    CCFLAGS_ARCH = -DECO_AARCH64
+    ARCH_TARGET = armv8
+    ECO_PKG_ID = eco-aarch64-linux-gnu-gcc
+    ECO_PKG_VER = 13.2.0
+    ECO_GEN_SYS_LIB = 00000000000000000000000053595333
+    ifneq ($(ECO_TOOLCHAIN_ENV),)
+        TOOL = aarch64-linux-gnu-
+    endif
+else
+    $(error Unknown ARCH: $(ARCH). Please check your ARCH variable)
+endif
+
+ifneq ($(ECO_TOOLCHAIN_ENV),)
+    TOOLCHAIN_SUBDIR = $(if $(ECO_PKG_ID),$(ECO_PKG_ID)-$(ECO_PKG_VER)$(SLASH),)
+    TOOLCHAIN = $(ECO_TOOLCHAIN_ENV)$(SLASH)$(TOOLCHAIN_SUBDIR)bin$(SLASH)
+    SYSROOT = --sysroot=$(ECO_TOOLCHAIN_ENV)$(SLASH)$(TOOLCHAIN_SUBDIR)
+else
+    TOOL =
+    TOOLCHAIN =
+    SYSROOT =
+endif
+
+# --- Tool Definitions ---
+CC_c = $(TOOLCHAIN)$(TOOL)gcc
+CC_cpp = $(TOOLCHAIN)$(TOOL)g++
+AR = $(TOOLCHAIN)$(TOOL)gcc-ar
+LD = $(TOOLCHAIN)$(TOOL)ld
+OC = $(TOOLCHAIN)$(TOOL)objcopy
+
+LANG_STD_c = -std=c89
+LANG_STD_cpp = -std=c++11
+
+CC = $(CC_c)
+LINK_CC = $(CC_c)
+LANG_STD_FLAGS = $(LANG_STD_c)
+
+# --- Target Configuration (Static vs Dynamic) ---
+ifeq ($(TARGET), 1)
+    # Static Link
+    BASE_TARGET = Static
+    CCFLAGS_BASE = -DECO_LIB
+else
+    # Dynamic Link
+    BASE_TARGET = Dynamic
+    CCFLAGS_BASE = -DECO_DLL
+endif
+
+# --- Output Directory Mapping ---
+CONFIG_DIR = $(if $(filter 1,$(DEBUG)),Debug,Release)
+OUT_DIR = $(PROJECT_ROOT)/BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)$(BASE_TARGET)$(CONFIG_DIR)
+OUT_NAME = EcoHeapSort
+
+# --- Compilation Flags ---
+# Includes
+INC = -I "$(ECO_FRAMEWORK)$(SLASH)Eco.Core1$(SLASH)SharedFiles" \
+-I "$(ECO_FRAMEWORK)$(SLASH)Eco.InterfaceBus1$(SLASH)SharedFiles" \
+-I "$(ECO_FRAMEWORK)$(SLASH)Eco.MemoryManager1$(SLASH)SharedFiles" \
+-I "$(ECO_FRAMEWORK)$(SLASH)Eco.FileSystemManagement1$(SLASH)SharedFiles" \
+-I "$(ECO_FRAMEWORK)$(SLASH)Eco.System1$(SLASH)SharedFiles" \
+-I $(PROJECT_ROOT)/SharedFiles$(SLASH) \
+-I $(PROJECT_ROOT)/HeaderFiles$(SLASH) \
+-I $(PROJECT_ROOT)/HeaderFiles$(SLASH)$(ARCH)
+
+# --- Linker Configuration ---
+LIB_DIR = -L "$(ECO_FRAMEWORK)$(SLASH)Eco.Core1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease" \
+-L "$(ECO_FRAMEWORK)$(SLASH)Eco.InterfaceBus1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease" \
+-L "$(ECO_FRAMEWORK)$(SLASH)Eco.MemoryManager1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease" \
+-L "$(ECO_FRAMEWORK)$(SLASH)Eco.FileSystemManagement1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease" \
+-L "$(ECO_FRAMEWORK)$(SLASH)Eco.System1$(SLASH)BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)StaticRelease"\
+-L "$(PROJECT_ROOT)/BuildFiles$(SLASH)$(PLATFORM)$(SLASH)$(ARCH_TARGET)$(SLASH)$(BASE_TARGET)$(CONFIG_DIR)"
+
+# Global Compiler Flags (-DECO_LINUX )
+CCFLAGS = $(SYSROOT) -Wall -ffreestanding -fno-builtin $(CCFLAGS_BASE) $(CCFLAGS_ARCH) -DUGUID_UTILITY -DECO_LINUX $(LANG_STD_FLAGS) $(INC)
+
+# Debug vs Release Flags
+ifeq ($(DEBUG), 1)
+    CCFLAGS += -g -DDEBUG
+else
+    CCFLAGS += -O2 -DNDEBUG
+endif
+
+ifeq ($(TARGET), 1)
+    # Eco archives refer to each other; rescan the group until resolved.
+    LIBS_TARGET = -Wl,--start-group -lA3A5BD4760D34C1691719DF4D8D41318 -l$(ECO_GEN_SYS_LIB) -l00000000000000000000000042757331 -l0000000000000000000000004D656D31 -l00000000000000000000000046534D31 -Wl,--end-group -lm -ldl -lgcc
+else
+    LIBS_TARGET = -lgcc -ldl -l$(ECO_GEN_SYS_LIB)
+endif
+
+# Linker flags and Bare-metal libraries
+LDFLAGS = $(SYSROOT) $(LDFLAGS_ARCH)
+LIBS = $(LIB_DIR) $(LIBS_TARGET)
+
+# --- Source and Object Files ---
+SRC_C = $(PROJECT_ROOT)/UnitTestFiles$(SLASH)SourceFiles$(SLASH)EcoHeapSort.c
+SRC_S = 
+
+OBJ_DIR = $(OUT_DIR)/obj/client
+OBJ = $(OBJ_DIR)/EcoHeapSort.o
+DEP = $(OBJ:.o=.d)
+COMPONENT_LIB = $(OUT_DIR)/libA3A5BD4760D34C1691719DF4D8D41318.a
+
+.PHONY: all clean
+all: $(OUT_DIR)/$(OUT_NAME)
+
+$(OBJ): $(MAKEFILE_DIR)/MakefileExe
+
+$(OBJ_DIR)/%.o: $(PROJECT_ROOT)/UnitTestFiles/SourceFiles/%.c
+	@mkdir -p $(OBJ_DIR)
+	$(CC) $(CCFLAGS) -MMD -MP -c $< -o $@
+
+ifeq ($(TARGET), 1)
+$(COMPONENT_LIB): $(wildcard $(PROJECT_ROOT)/SourceFiles/*.c $(PROJECT_ROOT)/HeaderFiles/*.h $(PROJECT_ROOT)/SharedFiles/*.h) $(MAKEFILE_DIR)/Makefile
+	$(MAKE) -C $(MAKEFILE_DIR) -f Makefile TARGET=$(TARGET) ARCH=$(ARCH) DEBUG=$(DEBUG)
+$(OUT_DIR)/$(OUT_NAME): $(COMPONENT_LIB)
+endif
+
+$(OUT_DIR)/$(OUT_NAME): $(OBJ)
+	$(LINK_CC) $(LDFLAGS) -o $@ $(OBJ) -Wl,-Map,$@.map $(LIBS)
+
+-include $(DEP)
+
+clean:
+	$(RM) $(OBJ) $(DEP) $(OUT_DIR)/$(OUT_NAME) $(OUT_DIR)/$(OUT_NAME).map

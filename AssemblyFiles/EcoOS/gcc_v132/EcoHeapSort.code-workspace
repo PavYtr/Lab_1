@@ -1,0 +1,169 @@
+{
+	"folders": [
+		{ "path": ".", "name": "AssemblyFiles" },
+		{ "path": "../../../BuildFiles", "name": "BuildFiles" },
+		{ "path": "../../../DependenciesFiles" },		
+		{ "path": "../../../DesignFiles" },
+		{ "path": "../../../HeaderFiles" },
+		{ "path": "../../../SharedFiles" },
+		{ "path": "../../../SourceFiles" },
+		{ "path": "../../../UnitTestFiles" }
+	],
+	"settings": {
+		"C_Cpp.default.includePath": [
+			"${workspaceFolder}/**",
+			"**/../../HeaderFiles",
+			"**/../../SharedFiles",
+			"$(ECO_FRAMEWORK)/Eco.Core1/SharedFiles",
+			"$(ECO_FRAMEWORK)/Eco.InterfaceBus1/SharedFiles",
+			"$(ECO_FRAMEWORK)/Eco.MemoryManager1/SharedFiles",
+			"$(ECO_FRAMEWORK)/Eco.FileSystemManagement1/SharedFiles",
+			"$(ECO_FRAMEWORK)/Eco.System1/SharedFiles"
+		],
+		"C_Cpp.default.cStandard": "c89",
+		"C_Cpp.default.defines": ["ECO_LIB", "ECO_WINDOWS", "DUGUID_UTILITY"],
+		"files.associations": { "*.h": "c", "*.lds": "linker", "Makefile*": "makefile" },
+		"terminal.integrated.automationProfile.windows": {"path": "cmd.exe" },
+		"terminal.integrated.defaultProfile.windows": "Command Prompt",
+		"makefile.configurations": [
+			{ "name": "EcoHeapSort StaticDebug|x86", "makeArgs": ["TARGET=1", "ARCH=x86", "DEBUG=1"] },
+			{ "name": "EcoHeapSort StaticRelease|avr ATmega328", "makeArgs": ["TARGET=1", "ARCH=avr", "DEBUG=0", "DEVICE=atmega328p"] },
+		]
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Debug Win x86",
+				"type": "cppdbg",
+				"request": "launch",
+				"program": "${workspaceFolder:BuildFiles}/Windows/x86/StaticDebug/EcoHeapSort.exe",
+				"MIMode": "gdb",
+				"miDebuggerPath": "${env:ECO_TOOLCHAIN}/eco-i686-win-dwarf-gcc-13.2.0-win-x86_64/bin/gdb.exe",
+				"preLaunchTask": "build EcoHeapSortUnitTest StaticDebug|x86"
+			},
+			{
+				"name": "Debug STM32F4 (OpenOCD)",
+				"type": "cppdbg",
+				"request": "launch",
+				"program": "${workspaceFolder:BuildFiles}/EcoOS/armv7/STM32F4/StaticDebug/EcoHeapSort.elf",
+				"MIMode": "gdb",
+				"miDebuggerPath": "${env:ECO_TOOLCHAIN}/eco-arm-none-eabi-gcc-13.2.0-win-x86_64/bin/arm-none-eabi-gdb.exe",
+				"setupCommands": [
+					{ "text": "target extended-remote localhost:3333" },
+					{ "text": "monitor reset halt" },
+					{ "text": "load" }
+				]
+			},
+			{
+				"name": "Flash Arduino (No Debug)",
+				"type": "cppdbg",
+				"request": "launch",
+				"program": "${workspaceFolder:BuildFiles}/EcoOS/avr/StaticRelease/NewProject3.elf",
+				"MIMode": "gdb",
+				"miDebuggerPath": "${env:ECO_TOOLCHAIN}/eco-avr-none-elf-gcc-13.2.0-win-x86_64/bin/avr-gdb.exe",
+				"preLaunchTask": "flash ATmega328p (avrdude)",
+				"externalConsole": false
+			}
+		]
+	},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			/* --- Master Task: Build Everything --- */
+			{
+				"label": "Build All Configurations",
+				"dependsOn": [
+					"build EcoHeapSort StaticRelease|x86",
+					"build EcoHeapSort StaticRelease|x64",
+					"build EcoHeapSort D1_Release|rv64",
+					"build EcoHeapSort STM32F4_Release|arm",
+					"build EcoHeapSort ATmega328_Release|avr"
+				],
+				"dependsOrder": "sequence",
+				"group": { "kind": "build", "isDefault": true }
+			},
+
+			/* --- Build Tasks for Each Device --- */
+			{
+				"label": "build EcoHeapSort StaticDebug|x86",
+				"type": "shell",
+				"command": "call make",
+				"args": ["-f", "Makefile", "TARGET=1", "ARCH=x86", "DEBUG=1"],
+				"problemMatcher": ["$gcc"]
+			},
+			{
+				"label": "build EcoHeapSort D1_Release|rv64",
+				"type": "shell",
+				"command": "call make",
+				"args": ["-f", "Makefile", "TARGET=1", "ARCH=rv64", "DEVICE=D1", "DEBUG=0"],
+				"problemMatcher": ["$gcc"]
+			},
+			{
+				"label": "build EcoHeapSort STM32F4_Release|arm",
+				"type": "shell",
+				"command": "call make",
+				"args": ["-f", "Makefile", "TARGET=1", "ARCH=aarch32", "DEVICE=STM32F4", "DEBUG=0"],
+				"options": { "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },				
+				"problemMatcher": ["$gcc"]
+			},
+			{
+				"label": "build EcoHeapSort StaticRelease|avr ATmega328",
+				"type": "shell",
+				"command": "call make",
+				"args": ["-f", "Makefile", "TARGET=1", "ARCH=avr", "DEVICE=ATmega328p", "DEBUG=0"],
+				"problemMatcher": ["$gcc"]
+			},
+
+			/* --- UnitTest Tasks (Windows) --- */
+			{
+				"label": "build EcoHeapSortUnitTest StaticDebug|x86",
+				"type": "shell",
+				"command": "call make",
+				"args": ["-f", "MakefileExe", "TARGET=1", "ARCH=x86", "DEBUG=1"],
+				"dependsOn": ["build EcoHeapSort StaticDebug|x86"],
+				"problemMatcher": ["$gcc"]
+			},
+
+			/* --- Flashing/Upload Tasks via ECO_TOOLCHAIN --- */
+			{
+				"label": "flash STM32F4 (OpenOCD)",
+				"type": "shell",
+				"command": "${env:ECO_TOOLCHAIN}/eco-openocd-win-x86_64/bin/openocd.exe",
+				"args": [
+					"-f", "interface/stlink.cfg",
+					"-f", "target/stm32f4x.cfg",
+					"-c", "program {${workspaceFolder:BuildFiles}/EcoOS/armv7/STM32F4/StaticRelease/EcoHeapSort.elf} verify reset exit"
+				]
+			},
+			{
+				"label": "flash D1 (OpenOCD)",
+				"type": "shell",
+				"command": "${env:ECO_TOOLCHAIN}/eco-openocd-riscv-win-x86_64/bin/openocd.exe",
+				"args": [
+					"-f", "interface/ftdi/cklink.cfg",
+					"-f", "target/d1.cfg",
+					"-c", "program {${workspaceFolder:BuildFiles}/EcoOS/rv64gc/D1/StaticRelease/EcoHeapSort.elf} verify reset exit"
+				]
+			},
+			{
+				"label": "flash ATmega328p (avrdude)",
+				"type": "shell",
+				"command": "${env:ECO_TOOLCHAIN}/eco-avrdude-7.2-win-x86_32/avrdude.exe",
+				"args": [
+					"-c", "arduino", "-p", "m328p", "-P", "COM3", "-b", "115200",
+					"-U", "flash:w:${workspaceFolder:BuildFiles}/EcoOS/avr/ATmega328p/StaticRelease/EcoHeapSort.hex:i"
+				]
+			},
+
+			/* --- Cleanup --- */
+			{
+				"label": "Clean All",
+				"type": "shell",
+				"command": "call make",
+				"args": ["clean"],
+				"options": { "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } }
+			}
+		]
+	}
+}
