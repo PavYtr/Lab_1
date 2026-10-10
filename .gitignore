@@ -40,3 +40,8 @@ Thumbs.db
 # Локальное задание для агента
 /prompt.txt
 Список заданий_1_v1.pdf
+
+/build/
+/.venv/
+/.cache/
+__pycache__/
